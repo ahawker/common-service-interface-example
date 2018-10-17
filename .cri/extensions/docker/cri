@@ -1,0 +1,29 @@
+.DEFAULT_GOAL := help
+.SUFFIXES:
+
+CRI_EXTENSION_NAME := docker
+
+SCRIPTS := $(sort $(wildcard scripts/*))
+
+.PHONY: build
+## Build container image for the repository
+build: scripts/build
+
+.PHONY: clean
+## Clean old container images from local machine
+clean: scripts/clean
+
+.PHONY: deploy
+## Push container image built from the repository to a remote image repository
+deploy: scripts/deploy
+
+.PHONY: %
+## Run docker script in scripts/% file
+%: scripts/% ;
+
+.PHONY: $(SCRIPTS)
+$(SCRIPTS):
+	@echo "Running $@..."
+	@$@ $(CTX)
+
+include $(HELP)

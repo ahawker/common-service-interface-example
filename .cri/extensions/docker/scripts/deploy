@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+BUILD_TAGS=$(echo "latest 1234 master-1234 master-1234-staging master-PLATFORM-4432" | xargs)
+
+for tag in ${BUILD_TAGS} ; do echo docker push $tag && sleep 0.5 ; done

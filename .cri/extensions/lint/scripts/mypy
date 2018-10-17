@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+echo mypy src/
+sleep 2

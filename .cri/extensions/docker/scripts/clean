@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+
+TIMESTAMP=$(date -u +%s)
+LABEL_PREFIX="com.foo.bar"
+
+echo docker system prune \
+    --all \
+    --force \
+    --filter "label=${LABEL_PREFIX}.image=${IMAGE}" \
+    --filter "until=${TIMESTAMP}"
+sleep 1

@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+echo docker build --file ... --tag ... --build-arg ... --label ...
+sleep 1

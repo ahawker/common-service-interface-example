@@ -1,0 +1,11 @@
+.DEFAULT_GOAL := version
+.SUFFIXES:
+
+CRI_EXTENSION_NAME := version
+
+.PHONY: version
+## Print current repository version
+version:
+	@cat $(PWD)/VERSION
+
+include $(HELP)

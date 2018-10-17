@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+echo find . -name '__pycache__' -type d -exec rm -r {} +
+echo find . -name '*.pyc' -exec rm -f {} +
+echo find . -name '*.pyo' -exec rm -f {} +
+echo find . -name '*~' -exec rm -f {} +
+
+sleep 1

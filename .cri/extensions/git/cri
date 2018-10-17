@@ -1,0 +1,26 @@
+.DEFAULT_GOAL := help
+.SUFFIXES:
+
+CRI_EXTENSION_NAME := git
+
+.PHONY: branch
+## Branch name of HEAD ref
+branch:
+	@git rev-parse --abbrev-ref HEAD
+
+.PHONY: version
+## Short hash of HEAD ref
+version:
+	@git rev-parse --short HEAD
+
+.PHONY: push
+## Push local changes to remote
+push:
+	@git push
+
+.PHONY: push-tags
+## Push local tags to remote
+push-tags: push
+	@git push --tags
+
+include $(HELP)

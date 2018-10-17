@@ -1,0 +1,24 @@
+.DEFAULT_GOAL := help
+.SUFFIXES:
+
+CRI_EXTENSION_NAME := test
+
+SCRIPTS := $(sort $(wildcard scripts/*))
+
+.PHONY: all
+## Run all test scripts
+all: $(SCRIPTS)
+
+.PHONY: unit
+## Run unit tests
+unit: scripts/unit
+
+.PHONY: %
+## Run tests in scripts/% file
+%: scripts/% ;
+
+.PHONY: $(SCRIPTS)
+$(SCRIPTS):
+	@$@ $(CTX)
+
+include $(HELP)

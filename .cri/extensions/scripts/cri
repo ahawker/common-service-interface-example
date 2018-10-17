@@ -1,0 +1,21 @@
+.DEFAULT_GOAL := help
+.SUFFIXES:
+
+#CRI_EXTENSION_NAME := scripts
+
+SCRIPTS := $(sort $(wildcard scripts/*))
+
+.PHONY: all
+## Run all scripts
+all: $(SCRIPTS)
+
+.PHONY: %
+## Run the scripts/% file
+%: scripts/% ;
+
+.PHONY: $(SCRIPTS)
+$(SCRIPTS):
+	@echo "Running script $@..."
+	@$@ $(CTX)
+
+#include $(HELP)

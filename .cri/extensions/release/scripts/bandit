@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+echo bandit -v -r src/
+sleep 2

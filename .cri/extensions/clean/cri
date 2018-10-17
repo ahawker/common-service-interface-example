@@ -1,0 +1,26 @@
+.DEFAULT_GOAL := help
+.SUFFIXES:
+
+CRI_EXTENSION_NAME := clean
+
+#SCRIPTS := $(sort $(wildcard scripts/*))
+
+# .PHONY: all
+# ## Run all cleaner scripts
+# all: $(SCRIPTS)
+
+.PHONY: python
+## Remove local python cache files
+python: scripts/python
+
+# .PHONY: %
+# ## Run cleaner in scripts/% file
+# %: scripts/% ;
+
+# .PHONY: $(SCRIPTS)
+# $(SCRIPTS):
+# 	@echo "Running $@..."
+# 	@$@ $(CTX)
+
+include $(SCRIPTS)
+include $(HELP)

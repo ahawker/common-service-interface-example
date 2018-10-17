@@ -1,0 +1,21 @@
+.DEFAULT_GOAL := help
+.SUFFIXES:
+
+CRI_EXTENSION_NAME := shell
+
+SCRIPTS := $(sort $(wildcard scripts/*))
+
+.PHONY: run
+## Run console/shell interface into running instance of repository
+run: scripts/run
+
+.PHONY: %
+## Run shell script in scripts/% file
+%: scripts/% ;
+
+.PHONY: $(SCRIPTS)
+$(SCRIPTS):
+	@echo "Running $@..."
+	@$@ $(CTX)
+
+include $(HELP)

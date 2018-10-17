@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+echo isort --recursive --check-only src/ tests/
+sleep 2

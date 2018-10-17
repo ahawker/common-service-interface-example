@@ -1,0 +1,38 @@
+.SUFFIXES:
+
+# COLORS
+GREEN  := $(shell tput -Txterm setaf 2)
+YELLOW := $(shell tput -Txterm setaf 3)
+WHITE  := $(shell tput -Txterm setaf 7)
+RESET  := $(shell tput -Txterm sgr0)
+
+# Max length of target name (padding)
+TARGET_MAX_CHAR_NUM = 20
+
+.PHONY: help
+## Show command help/usage
+help:
+	@echo 'Command:'
+	@echo '  $(YELLOW)$(CRI_COMMAND) $(CRI_EXTENSION_NAME)$(RESET)'
+	@echo ''
+	@echo 'Usage:'
+	@echo '  $(YELLOW)$(CRI_COMMAND)$(RESET) $(GREEN)<target>$(RESET)'
+ifeq ($(MAKELEVEL),0)
+	@echo '  $(YELLOW)$(CRI_COMMAND)$(RESET) $(GREEN)<extension>:<target>$(RESET)'
+	@echo ''
+	@echo 'Extensions:'
+	@printf '  $(YELLOW)%s$(RESET)\n' $(CRI_EXTENSIONS) | sort
+	@echo ''
+else
+	@echo ''
+endif
+	@echo 'Targets:'
+	@awk '/^[\/%a-zA-Z\-\_0-9]+:/ { \
+		helpMessage = match(lastLine, /^## (.*)/); \
+		if (helpMessage) { \
+			helpCommand = substr($$1, 0, index($$1, ":")-1); \
+			helpMessage = substr(lastLine, RSTART + 3, RLENGTH); \
+			printf "  ${YELLOW}%-$(TARGET_MAX_CHAR_NUM)s${RESET} ${GREEN}%s${RESET}\n", helpCommand, helpMessage; \
+		} \
+	} \
+	{ lastLine = $$0 }' $(MAKEFILE_LIST) | sort -u

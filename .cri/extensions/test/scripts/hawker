@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+echo py.test -v tests/hawker
+sleep 2

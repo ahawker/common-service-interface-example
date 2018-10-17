@@ -1,0 +1,51 @@
+.DEFAULT_GOAL := help
+.SUFFIXES:
+
+CRI_EXTENSION_NAME := release
+
+SCRIPTS := $(sort $(wildcard scripts/*))
+
+.PHONY: hawker
+## HAWKER RELEASE TARGET
+hawker: version
+	echo hawker
+
+
+.PHONY: all
+all: $(SCRIPTS)  ## Run all linters
+
+.PHONY: codeclimate
+codeclimate: scripts/codeclimate  ## Run codeclimate analysis against repository source code
+
+.PHONY: pep8
+pep8: scripts/pep8  ## Run pep8 against repository source code
+
+.PHONY: pylint
+pylint: scripts/pylint  ## Run pylint against repository source code
+
+.PHONY: mypy
+mypy: scripts/mypy  ## Run mypy against repository source code
+
+.PHONY: bandit
+bandit: scripts/bandit  ## Run bandit against repository source code
+
+.PHONY: isort
+isort: scripts/isort  ## Run isort against repository source code
+
+.PHONY: %
+%: scripts/% ;  @## Run linter in scripts/% file
+
+.PHONY: $(SCRIPTS)
+$(SCRIPTS):
+	@echo "Running $@..."
+	@$@ $(CTX)
+
+include $(HELP)
+
+
+GIT_EXTENSION := $(CRI_EXTENSIONS_DIR)/git/$(CRI_FILE)
+# ifeq ($(strip $(wildcard $(GIT_EXTENSION))),)
+# $(error "'git' extension required")
+# else
+include $(GIT_EXTENSION)
+# endif

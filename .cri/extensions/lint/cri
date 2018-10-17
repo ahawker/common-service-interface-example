@@ -1,0 +1,45 @@
+.DEFAULT_GOAL := help
+.SUFFIXES:
+
+CRI_EXTENSION_NAME := lint
+
+SCRIPTS := $(sort $(wildcard scripts/*))
+
+.PHONY: all
+## Run all linters
+all: $(SCRIPTS)
+
+.PHONY: codeclimate
+## Run codeclimate analysis against repository source code
+codeclimate: scripts/codeclimate
+
+.PHONY: pep8
+## Run pep8 against repository source code
+pep8: scripts/pep8
+
+.PHONY: pylint
+## Run pylint against repository source code
+pylint: scripts/pylint
+
+.PHONY: mypy
+## Run mypy against repository source code
+mypy: scripts/mypy
+
+.PHONY: bandit
+## Run bandit against repository source code
+bandit: scripts/bandit
+
+.PHONY: isort
+## Run isort against repository source code
+isort: scripts/isort
+
+.PHONY: %
+## Run linter in scripts/% file
+%: scripts/% ;
+
+.PHONY: $(SCRIPTS)
+$(SCRIPTS):
+	@echo "Running $@..."
+	@$@ $(CTX)
+
+include $(HELP)

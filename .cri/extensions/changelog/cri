@@ -1,0 +1,17 @@
+.DEFAULT_GOAL := help
+.SUFFIXES:
+
+CRI_EXTENSION_NAME := changelog
+
+SCRIPTS := $(sort $(wildcard scripts/*))
+
+.PHONY: create
+## Create changelog from git and GitHub metadata
+create: scripts/create
+
+.PHONY: $(SCRIPTS)
+$(SCRIPTS):
+	@echo "Running $@..."
+	@$@ $(CTX)
+
+include $(HELP)

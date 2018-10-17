@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+echo pylint --rcfile .pylintrc src/
+sleep 2

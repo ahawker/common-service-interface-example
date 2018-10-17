@@ -1,0 +1,29 @@
+.DEFAULT_GOAL := help
+.SUFFIXES:
+
+CRI_EXTENSION_NAME := health
+
+SCRIPTS := $(sort $(wildcard scripts/*))
+
+.PHONY: all
+## Run all health checks
+all: $(SCRIPTS)
+
+.PHONY: liveness
+## Run liveness check against running instance of repository
+liveness: scripts/liveness
+
+.PHONY: readiness
+## Run readiness check against running instance of repository
+readiness: scripts/readiness
+
+.PHONY: %
+## Run health check in scripts/% file
+%: scripts/% ;
+
+.PHONY: $(SCRIPTS)
+$(SCRIPTS):
+	@echo "Running $@..."
+	@$@ $(CTX)
+
+include $(HELP)

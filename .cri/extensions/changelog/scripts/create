@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+echo "github_changelog_generator -u ahawker -p common-service-interface-example"
+sleep 2

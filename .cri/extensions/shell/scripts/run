@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+echo bundle exec rails console
+sleep 2
