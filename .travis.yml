@@ -1,0 +1,94 @@
+sudo: false
+language: python
+
+python: '3.5'
+# - '3.5'
+# - '3.6'
+
+# before_install: echo BEFORE ROOT INSTALL
+# install: echo ROOT INSTALL
+
+# before_cache: echo BEFORE CACHE
+
+# after_success: echo AFTER SUCCESS ROOT
+# after_failure: echo AFTER FAILURE ROOT
+
+# before_script: echo BEFORE ROOT SCRIPT
+# script: echo ROOT SCRIPT
+# after_script: echo AFTER ROOT SCRIPT
+
+# before_deploy: echo BEFORE DEPLOY ROOT
+# deploy:
+#   provider: script
+#   script: echo ROOT DEPLOY!!!
+#   on:
+#     branch: master
+#     tags: true
+# after_deploy: echo AFTER DEPLOY ROOT
+
+
+jobs:
+  include:
+  - stage: "Docker: Test"
+    name: "cri docker:build-test"
+    script: echo "cri docker:build-test"
+  - stage: Lint
+    name: "cri lint:all"
+    script: echo "cri lint:all"
+  - stage: "Test: Isolated"
+    name: "cri test:isolated (2.7)"
+    script: echo "cri test:isolated"
+    python: "2.7"
+  - stage: "Test: Isolated"
+    name: "cri test:isolated (3.4)"
+    script: echo "cri test:isolated"
+    python: "3.4"
+  - stage: "Test: Isolated"
+    name: "cri test:isolated (3.5)"
+    script: echo "cri test:isolated"
+    python: "3.5"
+  - stage: "Docker: Runtime"
+    name: "cri docker:build"
+    script: echo "cri docker:build"
+  - stage: "Deploy: Staging"
+    name:  "cri deploy:staging"
+    script: skip
+    deploy:
+      provider: custom
+      script: echo "cri deploy:staging"
+      on:
+        branch: staging
+  - stage: "Test: Integrated"
+    name: "cri test:integrated"
+    script: echo "cri test:integrated"
+  - stage: "Deploy: Production"
+    name: "cri deploy:production"
+    script: skip
+    deploy:
+      provider: custom
+      script: echo "cri deploy:production"
+      on:
+        branch: master
+stages:
+  - "Docker: Test"
+  - "Lint"
+  - "Test: Isolated"
+  - "Docker: Runtime"
+  - "Deploy: Staging"
+  - "Test: Integrated"
+  - "Deploy: Production"
+
+
+
+  # - name: "cri ci:test "
+  #   script: echo TESTING && sleep 3
+  # - stage: build
+  #   name: "cri ci:build"
+  #   script: echo BUILDING && sleep 3
+  #   sudo: true
+  # - stage: stage
+  #   name: "cri ci:stage"
+  #   script: echo STAGING && sleep 3
+  # - stage: deploy
+  #   name: "cri ci:deploy"
+  #   script: echo DEPLOYING && sleep 3
