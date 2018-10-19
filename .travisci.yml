@@ -1,0 +1,35 @@
+sudo: true
+language: python
+
+python:
+- '3.4'
+- '3.5'
+- '3.6'
+
+before_install: echo BEFORE ROOT INSTALL
+install: echo ROOT INSTALL
+script: echo ROOT SCRIPT
+after_script: echo AFTER ROOT SCRIPT
+
+jobs:
+  include:
+  - stage: build
+    name: "cri ci:build"
+    script: echo BUILDING && sleep 3
+  - stage: lint
+    name: "cri ci:lint"
+    script: echo LINTING && sleep 3
+  - stage: test
+    name: "cri ci:test"
+    script: echo TESTING && sleep 3
+  - stage: stage
+    name: "cri ci:stage"
+    script: echo STAGING && sleep 3
+  - stage: deploy
+    name: "cri ci:deploy"
+    script: echo DEPLOYING && sleep 3
+stages:
+  - build
+  - lint
+  - test
+  - deploy
