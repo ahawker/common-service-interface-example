@@ -30,9 +30,9 @@ python: '3.5'
 jobs:
   include:
   - stage: "Docker: Test"
-    name: "cri docker:build-test"
-    script: echo "cri docker:build-test"
-  - stage: Lint
+    name: "cri docker:build-test docker:push-test"
+    script: echo "cri docker:build-test docker:push-test"
+  - stage: "Test: Lint"
     name: "cri lint:all"
     script: echo "cri lint:all"
   - stage: "Test: Isolated"
@@ -48,35 +48,46 @@ jobs:
     script: echo "cri test:isolated"
     python: "3.5"
   - stage: "Docker: Runtime"
-    name: "cri docker:build"
+    name: "cri docker:build docker:push"
     script: echo "cri docker:build"
-  - stage: "Deploy: Staging"
-    name:  "cri deploy:staging"
+  - stage: "Deploy: Integrated"
+    name:  "cri deploy:integrated"
     script: skip
     deploy:
-      provider: custom
-      script: echo "cri deploy:staging"
+      provider: script
+      script: echo "cri deploy:integrated"
       on:
-        branch: staging
+        branch: master
+        tags: false
   - stage: "Test: Integrated"
     name: "cri test:integrated"
     script: echo "cri test:integrated"
+  - stage: "Release: Version"
+    name: "cri release:version"
+    script: echo "cri release:version"
   - stage: "Deploy: Production"
     name: "cri deploy:production"
     script: skip
     deploy:
-      provider: custom
+      provider: script
       script: echo "cri deploy:production"
       on:
         branch: master
+        tags: true
+        condition: $TRAVIS_TAG =~ (?n)^(?<Major>0|[1-9]\d*)\.(?<Minor>0|[1-9]\d*)\.(?<Patch>0|[1-9]\d*)(?<PreReleaseTagWithSeparator>-(?<PreReleaseTag>((0|[1-9]\d*|\d*[A-Z-a-z-][\dA-Za-z-]*))(\.(0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*))*))?(?<BuildMetadataTagWithSeparator>\+(?<BuildMetadataTag>[\dA-Za-z-]+(\.[\dA-Za-z-]*)*))?$
 stages:
-  - "Docker: Test"
-  - "Lint"
-  - "Test: Isolated"
-  - "Docker: Runtime"
-  - "Deploy: Staging"
-  - "Test: Integrated"
-  - "Deploy: Production"
+  - name: "Docker: Test"
+  - name: "Test: Lint"
+  - name: "Test: Isolated"
+  - name: "Docker: Runtime"
+  - name: "Deploy: Integrated"
+    if: branch = master
+  - name: "Test: Integrated"
+    if: branch = master
+  - name: "Release: Version"
+    if: branch = master
+  - name: "Deploy: Production"
+    if: branch = master AND tag =~ (?n)^(?<Major>0|[1-9]\d*)\.(?<Minor>0|[1-9]\d*)\.(?<Patch>0|[1-9]\d*)(?<PreReleaseTagWithSeparator>-(?<PreReleaseTag>((0|[1-9]\d*|\d*[A-Z-a-z-][\dA-Za-z-]*))(\.(0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*))*))?(?<BuildMetadataTagWithSeparator>\+(?<BuildMetadataTag>[\dA-Za-z-]+(\.[\dA-Za-z-]*)*))?$
 
 
 
