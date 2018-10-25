@@ -29,7 +29,7 @@ python: '3.5'
 
 jobs:
   include:
-  - stage: "Docker: Test"
+  - stage: "Docker: Isolated"
     name: "cri docker:build-test docker:push-test"
     script: echo "cri docker:build-test docker:push-test"
   - stage: "Test: Lint"
@@ -47,7 +47,7 @@ jobs:
     name: "cri test:isolated (3.5)"
     script: echo "cri test:isolated"
     python: "3.5"
-  - stage: "Docker: Runtime"
+  - stage: "Docker: Integrated"
     name: "cri docker:build docker:push"
     script: echo "cri docker:build"
   - stage: "Deploy: Integrated"
@@ -62,7 +62,7 @@ jobs:
   - stage: "Test: Integrated"
     name: "cri test:integrated"
     script: echo "cri test:integrated"
-  - stage: "Release: Version"
+  - stage: "Release: Create"
     name: "cri release:version"
     script: echo "cri release:version"
   - stage: "Deploy: Production"
@@ -76,15 +76,15 @@ jobs:
         tags: true
         condition: $TRAVIS_TAG =~ (?n)^(?<Major>0|[1-9]\d*)\.(?<Minor>0|[1-9]\d*)\.(?<Patch>0|[1-9]\d*)(?<PreReleaseTagWithSeparator>-(?<PreReleaseTag>((0|[1-9]\d*|\d*[A-Z-a-z-][\dA-Za-z-]*))(\.(0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*))*))?(?<BuildMetadataTagWithSeparator>\+(?<BuildMetadataTag>[\dA-Za-z-]+(\.[\dA-Za-z-]*)*))?$
 stages:
-  - name: "Docker: Test"
+  - name: "Docker: Isolated"
   - name: "Test: Lint"
   - name: "Test: Isolated"
-  - name: "Docker: Runtime"
+  - name: "Docker: Integrated"
   - name: "Deploy: Integrated"
     if: branch = master
   - name: "Test: Integrated"
     if: branch = master
-  - name: "Release: Version"
+  - name: "Release: Create"
     if: branch = master
   - name: "Deploy: Production"
     if: branch = master AND tag =~ (?n)^(?<Major>0|[1-9]\d*)\.(?<Minor>0|[1-9]\d*)\.(?<Patch>0|[1-9]\d*)(?<PreReleaseTagWithSeparator>-(?<PreReleaseTag>((0|[1-9]\d*|\d*[A-Z-a-z-][\dA-Za-z-]*))(\.(0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*))*))?(?<BuildMetadataTagWithSeparator>\+(?<BuildMetadataTag>[\dA-Za-z-]+(\.[\dA-Za-z-]*)*))?$

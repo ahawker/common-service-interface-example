@@ -57,9 +57,9 @@ after_script: "cri travis-ci:after-script"
 
 jobs:
   include:
-  - stage: "Docker: Test"
-    name: "cri docker:build-test docker:push-test"
-    script: "cri docker:build-test docker:push-test"
+  - stage: "Docker: Isolated"
+    name: "cri docker:build-isolated docker:push-isolated"
+    script: "cri docker:build-isolated docker:push-isolated"
   - stage: "Test: Isolated"
     name: "cri lint:all"
     script: "cri lint:all"
@@ -75,46 +75,51 @@ jobs:
     name: "cri test:isolated (3.5)"
     script: "cri test:isolated"
     python: "3.5"
-  - stage: "Docker: Runtime"
-    name: "cri docker:build docker:push"
-    script: "cri docker:build"
+  - stage: "Docker: Integrated"
+    name: "cri docker:build-integrated docker:push-integrated"
+    script: "cri docker:build-integrated docker:push-integrated"
   - stage: "Deploy: Integrated"
     name:  "cri deploy:integrated"
     script: skip
     deploy:
       provider: script
       script: "cri deploy:integrated"
-      on:
-        branch: master
-        tags: false
+      skip_cleanup: true
   - stage: "Test: Integrated"
     name: "cri test:integrated"
     script: "cri test:integrated"
-  - stage: "Release: Version"
+  - stage: "Release: Create"
+    if: branch = master AND tag = ""
     name: "cri release:version"
     script: "cri release:version"
+  - stage: "Docker: Production"
+    name: "cri docker:build-production docker:push-production"
+    script: "cri docker:build-production docker:push-production"
+    if: branch = master AND "tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/"
   - stage: "Deploy: Production"
     name: "cri deploy:production"
     script: skip
+    if: branch = master AND "tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/"
     deploy:
       provider: script
       script: "cri deploy:production"
+      skip_cleanup: true
       on:
         branch: master
         tags: true
-        condition: $TRAVIS_TAG =~ ^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$
+        condition: $TRAVIS_TAG =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/
 stages:
-  - name: "Docker: Test"
+  - name: "Docker: Isolated"
   - name: "Test: Isolated"
-  - name: "Docker: Runtime"
+  - name: "Docker: Integrated"
   - name: "Deploy: Integrated"
-    if: branch = master
   - name: "Test: Integrated"
+  - name: "Release: Create"
     if: branch = master
-  - name: "Release: Version"
-    if: branch = master
+  - name: "Docker: Production"
+    if: branch = master AND "tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/"
   - name: "Deploy: Production"
-    if: branch = master AND "tag =~ (?n)^(?<Major>0|[1-9]\d*)\.(?<Minor>0|[1-9]\d*)\.(?<Patch>0|[1-9]\d*)(?<PreReleaseTagWithSeparator>-(?<PreReleaseTag>((0|[1-9]\d*|\d*[A-Z-a-z-][\dA-Za-z-]*))(\.(0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*))*))?(?<BuildMetadataTagWithSeparator>\+(?<BuildMetadataTag>[\dA-Za-z-]+(\.[\dA-Za-z-]*)*))?$"
+    if: branch = master AND "tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/"
 ```
 
 ### Visualization
@@ -125,7 +130,7 @@ stages:
 
 #### Stages
 
-Each stage is executed sequentially, e.g. "Docker: Test" **MUST** run before "Test: Lint". This means that stages with dependencies **MUST** be defined after the stages it depends on.
+Each stage is executed sequentially, e.g. "Docker: Isolated" **MUST** run before "Test: Lint". This means that stages with dependencies **MUST** be defined after the stages it depends on.
 
 If a stage results in a **FAILURE** or **ERROR**, all subsequent stages **MUST** be skipped and not run.
 
@@ -153,16 +158,21 @@ Each job within each stage will run through a set of the phases:
 
 If a phase results in a **FAILURE** or **ERROR**, the job/stage it's defined in will have the same result.
 
-### Stage: "Docker: Test"
+### Stage: "Docker: Isolated"
 
 The first stage of the CI workflow. This stage is responsible for building a Docker image used to run linters and isolated tests. This is done by invoking the following targets:
 
-* `cri docker:build-test` - Build Docker test image
-* `cri docker:push-test` - Push Docker test image to repository
+* `cri docker:build-isolated` - Build Docker isolated image
+* `cri docker:push-isolated` - Push Docker isolated image to repository
 
-Within those two targets, a Docker image is built, using `--target test`. This means that the `Dockerfile` must use [multi-stage builds](https://docs.docker.com/develop/develop-images/multistage-build/) and support a `test` stage. The goal of this Dockerfile stage is to build an image that is capable of running both `cri test:all` and `cri lint:all` targets.
+Within those two targets, a Docker image is built, using `--target isolated`. This means that the `Dockerfile` must use [multi-stage builds](https://docs.docker.com/develop/develop-images/multistage-build/) and support a `isolated` stage. The goal of this Dockerfile stage is to build an image that is capable of running both `cri test:isolated` and `cri lint:all` targets.
 
-This is a separate Dockerfile stage as the dependencies necessary to run linting checks and tests **SHOULD NEVER** be available in a production image.
+This is a separate Dockerfile stage as the dependencies necessary to run linting checks and isolated tests should **NEVER** be available in a production image.
+
+**Expectations:**
+
+* This stage will run on **ALL** branches and **ALL** pull-requests.
+* This stage is expected to tag the Docker image appropriately so it can be deployed into a isolated environment.
 
 **Conditions:**
 
@@ -170,11 +180,11 @@ This is a separate Dockerfile stage as the dependencies necessary to run linting
 
 **Success:**
 
-If this stage succeeds, it means that there is a image built from the `test` target located in the Docker image repository that can be used for future stages in the CI workflow.
+If this stage succeeds, it means that there is a image built from the `isolated` target located in the Docker image repository that can be used for future stages in the CI workflow.
 
 **Failure:**
 
-This stage will fail if it fails to build the Dockerfile `test` target **OR** fails to push it to the image repository.
+This stage will fail if it fails to build the Dockerfile `isolated` target **OR** fails to push it to the image repository.
 
 If this stage fails, no other stages will run.
 
@@ -182,14 +192,19 @@ If this stage fails, no other stages will run.
 
 The second stage of the CI workflow. This stage is responsible for the running linting and isolated tests against all language versions supported by the repository.
 
-Prior to running this stage, it should pull down and validate access to the test image created in the "Docker: Test" stage.
+Prior to running this stage, it should pull down and validate access to the isolated image created in the "Docker: Isolated" stage.
 
 * `cri lint:all` - Run all linters
 * `cri test:isolated` - Run all isolated tests (capable of succeeding with no external dependencies)
 
+**Expectations:**
+
+* This stage will run on **ALL** branches and **ALL** pull-requests that successfully perform the previous stages.
+* If this stage completes successfully, the expectation is that the code change is high quality.
+
 **Conditions:**
 
-* If the "Docker: Test" stage is successful.
+* If the "Docker: Isolated" stage is successful.
 
 **Success:**
 
@@ -201,12 +216,23 @@ This stage will fail if any of the lint or isolated test jobs fail.
 
 If this stage fails, no other stages will run.
 
-### Stage: "Docker: Runtime"
+### Stage: "Docker: Integrated"
 
-The third stage of the CI workflow. This stage is responsible for building a Docker image used to run the repository in integrated and production environment. This **MUST NOT** contain development/test dependencies. This image should be lightweight. This is done by invoking the following targets:
+The third stage of the CI workflow. This stage is responsible for building a Docker image used to run integrated tests. This is done by invoking the following targets:
 
-* `cri docker:build` - Build Docker image
-* `cri docker:push` - Push Docker image to repository
+* `cri docker:build-integrated` - Build Docker isolated image
+* `cri docker:push-integrated` - Push Docker isolated image to repository
+
+Within those two targets, a Docker image is built, using `--target integrated`. This means that the `Dockerfile` must use [multi-stage builds](https://docs.docker.com/develop/develop-images/multistage-build/) and support a `integrated` stage. The goal of this Dockerfile stage is to build an image that is capable of running the `cri test:integrated` target.
+
+This is a separate Dockerfile stage as the dependencies necessary to run the integrated tests should never be available in a production image.
+
+If no additional dependencies are necessary to run the integrated tests, this can be a duplicate of the `production` target.
+
+**Expectations:**
+
+* This stage will run on **ALL** branches and **ALL** pull-requests that successfully perform the previous stages.
+* This stage is expected to tag the Docker image appropriately so it can be deployed into an integrated environment.
 
 **Conditions:**
 
@@ -214,11 +240,11 @@ The third stage of the CI workflow. This stage is responsible for building a Doc
 
 **Success:**
 
-If this stage succeeds, it means that there is a image built from the default target located in the Docker image repository that can be used for future stages in the CI workflow.
+If this stage succeeds, it means that there is a image built from the `isolated` target located in the Docker image repository that can be used for future stages in the CI workflow.
 
 **Failure:**
 
-This stage will fail if it fails to build the Dockerfile default target **OR** fails to push it to the image repository.
+This stage will fail if it fails to build the Dockerfile `integrated` target **OR** fails to push it to the image repository.
 
 If this stage fails, no other stages will run.
 
@@ -226,41 +252,50 @@ If this stage fails, no other stages will run.
 
 The fourth stage of the CI workflow. This stage is responsible for deploying the Docker image built in the previous stage into an _integrated_ environment. An _integrated_ environment is one that is running all external dependencies necessary for the integrated tests to succeed.
 
-Prior to running this stage, it should pull down and validate access to the default target image created in the "Docker: Runtime" stage.
+Prior to running this stage, it should pull down and validate access to the `integrated` target image created in the "Docker: Integrated" stage.
 
 This is completed by invoking the following targets:
 
 * `cri deploy:integrated` - Deploy Docker image to environment where it has access to its external dependencies
 
+**Expectations:**
+
+* This stage will run on **ALL** branches and **ALL** pull-requests that successfully perform the previous stages.
+* This stage expects that `integrated` environments can be created/destroyed in relatively short order.
+* This stage expects that **MANY** `integrated` environments can run at the same time without impacting each other.
+
 **Conditions:**
 
-* If the "Docker: Runtime" stage is successful.
-* If the current build is using an un-tagged `master` branch.
+* If the "Docker: Integrated" stage is successful.
 
 **Success:**
 
-If this stage succeeds, it means that the image created by the "Docker: Runtime" stage has successfully been deployed into an integrated environment where it can be tested.
+If this stage succeeds, it means that the image created by the "Docker: Integrated" stage has successfully been deployed into an integrated environment where it can be tested.
 
 **Failure:**
 
-This stage will fail if it fails to deploy the Docker image built in the "Docker: Runtime" stage to an integrated environment.
+This stage will fail if it fails to deploy the Docker image built in the "Docker: Integrated" stage to an integrated environment.
 
 If this stage fails, no other stages will run.
 
 ### Stage: "Test: Integrated"
 
-The fifth stage of the CI workflow. This stage is responsible for running integrated tests against the Docker image built by the "Docker: Runtime" stage in an integrated environment. This means that the running Docker image has access to all of its external dependencies. This is completed by invoking the following targets:
+The fifth stage of the CI workflow. This stage is responsible for running integrated tests against the Docker image built by the "Docker: Integrated" stage in an integrated environment. This means that the running Docker image has access to all of its external dependencies. This is completed by invoking the following targets:
 
 * `cri test:integrated` - Runs all integrated tests that rely on external dependencies
+
+**Expectations:**
+
+* This stage will run on **ALL** branches and **ALL** pull-requests that successfully perform the previous stages.
+* If this stage completes successfully, the expectation is that the code change is high quality and should merge into production **WITHOUT** any issue.
 
 **Conditions:**
 
 * If the "Docker: Integrated" stage is successful.
-* If the current build is using an un-tagged `master` branch.
 
 **Success:**
 
-If this stage succeeds, it means that the image created by the "Docker: Runtime" stage has successfully run its integrated tests without failure.
+If this stage succeeds, it means that the image created by the "Docker: Integrated" stage has successfully run its integrated tests without failure.
 
 **Failure:**
 
@@ -268,16 +303,16 @@ This stage will fail if there are any integrated test failures.
 
 If this stage fails, no other stages will run.
 
-### Stage: "Release: Version"
+### Stage: "Release: Create"
 
 The sixth stage of the CI workflow. This stage is responsible for creating a "release" in the repository, which in turn, starts the process for a production deployment. A "release" consists of performing the following actions:
 
 * Bumping the repository version based on [semver](https://semver.org) conventions
 * Updating the repository changelog
 * Creating a repository tag
-* Pushes this changes to the repository remote
-* Tagging the image created in "Docker: Runtime" stage with new version
-* Pushing tagged Docker image to repository
+* Commit/push changes to the remote repository
+* Tag the image created in "Docker: Integrated" stage with new version
+* Push tagged Docker image to repository
 
 These actions are performed by invoking the following targets:
 
@@ -287,6 +322,11 @@ These actions are performed by invoking the following targets:
 * `cri git:push-tags` - Push newly created release tag to remote
 * `cri docker:tag` - Tag image using latest repository version
 * `cri docker:push-tags` - Push tagged image to repository
+
+**Expectations:**
+
+* This stage will run **ONLY** on untagged versions of the `master` branch.
+* The actions of this stage will start another CI workflow job that will perform the final deployment to production.
 
 **Conditions:**
 
@@ -303,20 +343,57 @@ This stage will fail if it fails to update the version, changelog or push releas
 
 If this stage fails, no other stages will run.
 
+### Stage: "Docker: Production"
+
+The seventh stage of the CI workflow. This stage is responsible for building a Docker image used to run production environments. This is done by invoking the following targets:
+
+* `cri docker:build-production` - Build Docker production image
+* `cri docker:push-production` - Push Docker production image to repository
+
+Within those two targets, a Docker image is built, using `--target production`. This means that the `Dockerfile` must use [multi-stage builds](https://docs.docker.com/develop/develop-images/multistage-build/) and support a `production` stage. The goal of this Dockerfile stage is to build an image that is lightweight and capable of running in production environments.
+
+This is a separate Dockerfile stage as the dependencies necessary to run the isolated and integrated tests should **NEVER** be available in this image.
+
+**Expectations:**
+
+* This stage will run on **ONLY** tagged versions of the `master` branch.
+* This stage expects that the "Release: Create" stage was successfully run on a prior build of the un-tagged `master` branch.
+* This stage is expected to tag the Docker image appropriately so it can be deployed into the production environment.
+
+**Conditions:**
+
+* If the "Test: Integrated" stage was successful on the current build.
+* If the "Release: Create" stage was successful on a previous build (PR merge to master).
+
+**Success:**
+
+If this stage succeeds, it means that there is a image built from the `production` target located in the Docker image repository that can be used in production environments.
+
+**Failure:**
+
+This stage will fail if it fails to build the Dockerfile `production` target **OR** fails to push it to the image repository.
+
+If this stage fails, no other stages will run.
+
 ### Stage: "Deploy: Production"
 
-The seventh stage of the CI workflow. This stage is responsible for deploying the Docker image built in the "Docker: Runtime" stage into a _production_ environment. A _production_ environment is one that is running an accessible by non-company users.
+The eighth stage of the CI workflow. This stage is responsible for deploying the Docker image built in the "Docker: Production" stage into a _production_ environment. A _production_ environment is one that is running an accessible by non-company users.
 
-Prior to running this stage, it should pull down and validate access to the default target image created in the "Docker: Runtime" stage.
+Prior to running this stage, it should pull down and validate access to the `production` target image created in the "Docker: Production" stage.
 
 This is completed by invoking the following targets:
 
 * `cri deploy:production` - Deploy Docker image to a production environment
 
+**Expectations:**
+
+* This stage will run on **ONLY** tagged versions of the `master` branch that follow [semver](https://semver.org) naming conventions.
+* This stage is expected to deploy the image created in the "Docker: Production" to a production environment.
+
 **Conditions:**
 
-* If the "Release: Version" stage is successful.
-* If the current build is using an untagged `master` branch.
+* If the current build is using a tagged `master` branch that follows [semver](https://semver.org) naming conventions.
+* If the "Docker: Production" stage was successful on the current build.
 
 ### Future Considerations
 
@@ -325,6 +402,11 @@ The following is a working list of items up for potential consideration in the f
 * How does this plug into deployment management?
   * Spinnaker?
   * Rolling, Canary, Blue/Green Deployments?
+  * Rollbacks?
+  * Configuration Management?
+  * Infrastructure changes?
+  * Kubernetes? Helm?
+  * Secrets?
 
 ## Links
 
