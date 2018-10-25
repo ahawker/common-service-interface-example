@@ -58,11 +58,11 @@ jobs:
   - stage: "Docker: Production"
     name: "cri docker:build-production docker:push-production"
     script: "echo cri docker:build-production docker:push-production"
-    if: "branch = master AND tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/"
+    if: branch = master AND tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/
   - stage: "Deploy: Production"
     name: "cri deploy:production"
     script: skip
-    if: "branch = master AND tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/"
+    if: branch = master AND tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/
     deploy:
       provider: script
       script: "echo cri deploy:production"
@@ -80,7 +80,6 @@ stages:
   - name: "Release: Create"
     if: branch = master
   - name: "Docker: Production"
-    if: "branch = master AND tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/"
+    if: branch = master AND tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/
   - name: "Deploy: Production"
-    if: "branch = master AND tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/"
-  
+    if: branch = master AND tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/
