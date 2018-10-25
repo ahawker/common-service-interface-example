@@ -1,105 +1,86 @@
-sudo: false
+sudo: true
 language: python
 
 python: '3.5'
-# - '3.5'
-# - '3.6'
 
-# before_install: echo BEFORE ROOT INSTALL
-# install: echo ROOT INSTALL
-
-# before_cache: echo BEFORE CACHE
-
-# after_success: echo AFTER SUCCESS ROOT
-# after_failure: echo AFTER FAILURE ROOT
-
-# before_script: echo BEFORE ROOT SCRIPT
-# script: echo ROOT SCRIPT
-# after_script: echo AFTER ROOT SCRIPT
-
-# before_deploy: echo BEFORE DEPLOY ROOT
-# deploy:
-#   provider: script
-#   script: echo ROOT DEPLOY!!!
-#   on:
-#     branch: master
-#     tags: true
-# after_deploy: echo AFTER DEPLOY ROOT
-
+before_install: "echo cri travis-ci:before-install"
+install: "echo cri travis-ci:install"
+before_script: "echo cri travis-ci:before-script"
+script: "echo cri travis-ci:script"
+before_cache: "echo cri travis-ci:before-cache"
+after_success: "echo cri travis-ci:after-success"
+after_failure: "echo cri travis-ci:after-failure"
+before_deploy: "echo cri travis-ci:before-deploy"
+deploy:
+  provider: script
+  script: "echo cri travis-ci:deploy"
+  skip_cleanup: true
+after_deploy: "echo cri travis-ci:after-deploy"
+after_script: "echo cri travis-ci:after-script"
 
 jobs:
   include:
-  - stage: "Docker: Test"
-    name: "cri docker:build-test docker:push-test"
-    script: echo "cri docker:build-test docker:push-test"
-  - stage: "Test: Lint"
+  - stage: "Docker: Isolated"
+    name: "cri docker:build-isolated docker:push-isolated"
+    script: "echo cri docker:build-isolated docker:push-isolated"
+  - stage: "Test: Isolated"
     name: "cri lint:all"
-    script: echo "cri lint:all"
+    script: "echo cri lint:all"
   - stage: "Test: Isolated"
     name: "cri test:isolated (2.7)"
-    script: echo "cri test:isolated"
+    script: "echo cri test:isolated"
     python: "2.7"
   - stage: "Test: Isolated"
     name: "cri test:isolated (3.4)"
-    script: echo "cri test:isolated"
+    script: "echo cri test:isolated"
     python: "3.4"
   - stage: "Test: Isolated"
     name: "cri test:isolated (3.5)"
-    script: echo "cri test:isolated"
+    script: "echo cri test:isolated"
     python: "3.5"
-  - stage: "Docker: Runtime"
-    name: "cri docker:build docker:push"
-    script: echo "cri docker:build"
+  - stage: "Docker: Integrated"
+    name: "cri docker:build-integrated docker:push-integrated"
+    script: "echo cri docker:build-integrated docker:push-integrated"
   - stage: "Deploy: Integrated"
     name:  "cri deploy:integrated"
     script: skip
     deploy:
       provider: script
-      script: echo "cri deploy:integrated"
-      on:
-        branch: master
-        tags: false
+      script: "echo cri deploy:integrated"
+      skip_cleanup: true
   - stage: "Test: Integrated"
     name: "cri test:integrated"
-    script: echo "cri test:integrated"
-  - stage: "Release: Version"
+    script: "echo cri test:integrated"
+  - stage: "Release: Create"
+    if: branch = master AND tag = ""
     name: "cri release:version"
-    script: echo "cri release:version"
+    script: "echo cri release:version"
+  - stage: "Docker: Production"
+    name: "cri docker:build-production docker:push-production"
+    script: "echo cri docker:build-production docker:push-production"
+    if: branch = master AND "tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/"
   - stage: "Deploy: Production"
     name: "cri deploy:production"
     script: skip
+    if: branch = master AND "tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/"
     deploy:
       provider: script
-      script: echo "cri deploy:production"
+      script: "echo cri deploy:production"
+      skip_cleanup: true
       on:
         branch: master
         tags: true
-        condition: $TRAVIS_TAG =~ (?n)^(?<Major>0|[1-9]\d*)\.(?<Minor>0|[1-9]\d*)\.(?<Patch>0|[1-9]\d*)(?<PreReleaseTagWithSeparator>-(?<PreReleaseTag>((0|[1-9]\d*|\d*[A-Z-a-z-][\dA-Za-z-]*))(\.(0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*))*))?(?<BuildMetadataTagWithSeparator>\+(?<BuildMetadataTag>[\dA-Za-z-]+(\.[\dA-Za-z-]*)*))?$
+        condition: $TRAVIS_TAG =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/
 stages:
-  - name: "Docker: Test"
-  - name: "Test: Lint"
+  - name: "Docker: Isolated"
   - name: "Test: Isolated"
-  - name: "Docker: Runtime"
+  - name: "Docker: Integrated"
   - name: "Deploy: Integrated"
-    if: branch = master
   - name: "Test: Integrated"
+  - name: "Release: Create"
     if: branch = master
-  - name: "Release: Version"
-    if: branch = master
+  - name: "Docker: Production"
+    if: branch = master AND "tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/"
   - name: "Deploy: Production"
-    if: branch = master AND tag =~ (?n)^(?<Major>0|[1-9]\d*)\.(?<Minor>0|[1-9]\d*)\.(?<Patch>0|[1-9]\d*)(?<PreReleaseTagWithSeparator>-(?<PreReleaseTag>((0|[1-9]\d*|\d*[A-Z-a-z-][\dA-Za-z-]*))(\.(0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*))*))?(?<BuildMetadataTagWithSeparator>\+(?<BuildMetadataTag>[\dA-Za-z-]+(\.[\dA-Za-z-]*)*))?$
-
-
-
-  # - name: "cri ci:test "
-  #   script: echo TESTING && sleep 3
-  # - stage: build
-  #   name: "cri ci:build"
-  #   script: echo BUILDING && sleep 3
-  #   sudo: true
-  # - stage: stage
-  #   name: "cri ci:stage"
-  #   script: echo STAGING && sleep 3
-  # - stage: deploy
-  #   name: "cri ci:deploy"
-  #   script: echo DEPLOYING && sleep 3
+    if: branch = master AND "tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/"
+  
