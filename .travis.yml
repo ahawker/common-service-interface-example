@@ -83,4 +83,3 @@ stages:
     if: branch = master AND tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/
   - name: "Deploy: Production"
     if: branch = master AND tag =~ /(\d+\.)?(\d+\.)?(\*|\d+)$/
-  
