@@ -11,7 +11,10 @@ before_cache: "echo cri travis-ci:before-cache"
 after_success: "echo cri travis-ci:after-success"
 after_failure: "echo cri travis-ci:after-failure"
 before_deploy: "echo cri travis-ci:before-deploy"
-deploy: "echo cri travis-ci:deploy"
+deploy:
+  provider: script
+  script: "echo cri travis-ci:deploy"
+  skip_cleanup: true
 after_deploy: "echo cri travis-ci:after-deploy"
 after_script: "echo cri travis-ci:after-script"
 
